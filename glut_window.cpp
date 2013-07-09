@@ -1,7 +1,8 @@
 /*
- * Simple particle model over heightfield computed in real time on INPE MEPhI cluster.
+ * GLUT window class
  *
- * Copyright (C) Vlad Kaipetsky <vkaipetsky@gmail.com>
+ * Copyright (C) Fedorenko Maxim <varlllog@gmail.com>
+ *               Vlad Kaipetsky <vkaipetsky@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,130 +19,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include <GL/freeglut.h>    
-#include <GL/gl.h> 
-#include <GL/glu.h> 
-
-#include <unistd.h>
-#include <math.h>
-
-#include <vector>
-
-/* ASCII code for the escape key. */
-#define ESCAPE 27
-
-/* The number of our GLUT window */
-int window; 
-
-/* rotation angles. */
-float aroundX = 30.0f;
-float aroundY = 0.0f;
-
-/* A general OpenGL initialization function.  Sets all of the initial parameters. */
-void InitGL(int Width, int Height)          // We call this right after our OpenGL window is created.
-{
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);    // This Will Clear The Background Color To Black
-  glClearDepth(1.0);        // Enables Clearing Of The Depth Buffer
-  glDepthFunc(GL_LESS);              // The Type Of Depth Test To Do
-  glEnable(GL_DEPTH_TEST);            // Enables Depth Testing
-  glShadeModel(GL_SMOOTH);      // Enables Smooth Color Shading
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();        // Reset The Projection Matrix
-
-  gluPerspective(45.0f,(GLfloat)Width/(GLfloat)Height,0.1f,100.0f);  // Calculate The Aspect Ratio Of The Window
-
-  glMatrixMode(GL_MODELVIEW);
-}
-
-/* The function called when our window is resized (which shouldn't happen, because we're fullscreen) */
-void ReSizeGLScene(int Width, int Height)
-{
-  if (Height==0)        // Prevent A Divide By Zero If The Window Is Too Small
-    Height=1;
-
-  glViewport(0, 0, Width, Height);    // Reset The Current Viewport And Perspective Transformation
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-
-  gluPerspective(45.0f,(GLfloat)Width/(GLfloat)Height,0.1f,100.0f);
-  glMatrixMode(GL_MODELVIEW);
-}
-
-
-float randInRange(float min, float max)
-{
-  return min + (max - min) * rand() / (float)RAND_MAX;
-}
-
-float sqr( float val )
-{
-  return val * val;
-}
-
-struct Index3
-{
-  int i, j, k;
-};
-
-struct Vector3
-{
-  Vector3() {} // empty default ctor for perf reasons
-  Vector3( float newX, float newY, float newZ ) : x(newX), y(newY), z(newZ) {}
-  float x, y, z;
-};
-
-struct Particle
-{
-  struct Vector3 pos;
-  struct Vector3 vel;
-  struct Vector3 color;
-  struct Index3 bucket;
-};
-
+#include "glut_window.hpp"
 
 #define NUM_PARTICLES 10000
-
-struct Particle particles[NUM_PARTICLES];
-
-// spatial grid
-class Cell
-{
-public:
-  std::vector<Particle> particles;
-};
-
 
 #define NUM_CELLS_ACROSS_X 32
 #define NUM_CELLS_ACROSS_Y 8
 #define NUM_CELLS_ACROSS_Z 32
 
 Cell cells[NUM_CELLS_ACROSS_X][NUM_CELLS_ACROSS_Y][NUM_CELLS_ACROSS_Z];
+struct Particle particles[NUM_PARTICLES];
 
-struct AABB
-{
-  AABB( const Vector3& newMin, const Vector3& newMax ) : min(newMin), max(newMax) {}
-  Vector3 min;
-  Vector3 max;
-};
-
-AABB cellAABB( int i, int j, int k )
-{
-  const float offsetX = -2.0f;
-  const float offsetZ = -2.0f;
-  const float cellSize = 8.0f / 64.0f;
-  AABB res( Vector3( offsetX + i * cellSize, j * cellSize, offsetZ + k * cellSize ),
-            Vector3( offsetX + (i+1) * cellSize, (j+1) * cellSize, offsetZ + (k+1) * cellSize ) );
-  return res;
-}
-
-float distanceSquared( const Vector3& a, const Vector3& b )
-{
-  return (a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y) + (a.z - b.z)*(a.z - b.z);
-}
-
-void drawAABB( const AABB& aabb, unsigned int color = 0 )
+void GLUTWindow::drawAABB( const AABB& aabb, unsigned int color /* = 0 */ )
 {
   glBegin(GL_LINES);
   // draw the 12 lines that make up this box:
@@ -162,44 +51,61 @@ void drawAABB( const AABB& aabb, unsigned int color = 0 )
   glEnd();
 }
 
-void interpolateColor( float r0, float g0, float b0,
-                       float r1, float g1, float b1, float t )
+void GLUTWindow::interpolateColor( float r0, float g0, float b0,
+                                   float r1, float g1, float b1, float t )
 {
   glColor3f( r0 * (1.0f-t) + r1 * t, g0 * (1.0f-t) + g1 * t, b0 * (1.0f-t) + b1 * t );
 }
 
 
-void addVec( Vector3& a, const Vector3& b )
-{
-  a.x += b.x;
-  a.y += b.y;
-  a.z += b.z;
+/* A general OpenGL initialization function.  Sets all of the initial parameters. 
+ * We call this right after our OpenGL window is created.     */
+void GLUTWindow::InitGL( int w, int h ) {
+  
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);    // This Will Clear The Background Color To Black
+  glClearDepth(1.0);                       // Enables Clearing Of The Depth Buffer
+  glDepthFunc(GL_LESS);                    // The Type Of Depth Test To Do
+  glEnable(GL_DEPTH_TEST);                 // Enables Depth Testing
+  glShadeModel(GL_SMOOTH);                 // Enables Smooth Color Shading
+  
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();             // Reset The Projection Matrix
+  
+  // Calculate The Aspect Ratio Of The Window 
+  gluPerspective(45.0f,(GLfloat)w/(GLfloat)h,0.1f,100.0f);
+  
+  glMatrixMode(GL_MODELVIEW);
 }
 
-
-Vector3 diffVec( const Vector3& a, const Vector3& b )
-{
-  return Vector3( a.x - b.x, a.y - b.y, a.z - b.z );
+/* The function called when our window is resized */
+void GLUTWindow::ReSizeGLScene( int w, int h ) {
+  // Prevent A Divide By Zero If The Window Is Too Small
+  if( h == 0 ) {
+    h = 1;
+  }
+  // Reset The Current Viewport And Perspective Transformation
+  glViewport(0, 0, w, h);
+  
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  
+  gluPerspective(45.0f,(GLfloat)w/(GLfloat)h,0.1f,100.0f);
+  glMatrixMode(GL_MODELVIEW);
 }
-
-
-Vector3 prodVec( const Vector3& a, const float c )
-{
-  return Vector3( a.x * c, a.y * c, a.z * c );
-}
-
 
 /* The main drawing function. */
-void DrawGLScene()
-{
+void GLUTWindow::DrawGLScene() {
+  static Timer timer;
+
+  // Clear The Screen And The Depth Buffer 
   glClearColor( 1.0f, 1.0f, 1.0f, 1.0f );
-  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);  // Clear The Screen And The Depth Buffer
+  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
   glLoadIdentity();        // make sure we're no longer rotated.
   glTranslatef(0.0f,0.0f,-5.0f);    // Move Right 3 Units, and back into the screen 7
-  
-  glRotatef(aroundX,1.0f,0.0f,0.0f);
-  glRotatef(aroundY,0.0f,1.0f,0.0f);
+
+  glRotatef(m_rotate_x,1.0f,0.0f,0.0f);
+  glRotatef(m_rotate_y,0.0f,1.0f,0.0f);
 
   glEnable( GL_LINE_SMOOTH );
   glEnable( GL_POLYGON_SMOOTH );
@@ -219,7 +125,7 @@ void DrawGLScene()
     {
       for ( j = 0;  j < HF_WIDTH;  j++)
       {
-        float distanceFromCenter = sqrtf( sqr(0.0f+(float)(i-HF_WIDTH/3)*10.0f/HF_WIDTH) + sqr(0.0f + (float)(j-HF_HEIGHT/2)*10.0f/HF_HEIGHT) );
+        float distanceFromCenter = sqrtf( pow2(0.0f+(float)(i-HF_WIDTH/3)*10.0f/HF_WIDTH) + pow2(0.0f + (float)(j-HF_HEIGHT/2)*10.0f/HF_HEIGHT) );
         heights[i][j] = 0.8f * cosf( distanceFromCenter ) * cosf( distanceFromCenter ) / (1.0f + 0.1f * distanceFromCenter * distanceFromCenter );
       }
     }
@@ -239,7 +145,7 @@ void DrawGLScene()
 
   glBegin(GL_TRIANGLES);        // start drawing the cube.
   
-  // generate a random heightfield within the cube 1.0f across
+// generate a random heightfield within the cube 1.0f across
   for ( i = 0;  i < HF_HEIGHT-1;  i++ )
   {
     for ( j = 0;  j < HF_WIDTH-1;  j++)
@@ -666,28 +572,43 @@ void DrawGLScene()
 }
 
 /* The function called whenever a key is pressed. */
-void keyPressed(unsigned char key, int x, int y) 
-{
-    /* avoid thrashing this call */
-    usleep(100);
-
-    /* If escape is pressed, kill everything. */
-    if (key == ESCAPE) 
-    { 
-      /* shut down our window */
-      glutDestroyWindow(window); 
-      
-      /* exit the program...normal termination. */
-      exit(0);                   
-    }
+void GLUTWindow::keyPressed( unsigned char key, int x, int y ) {
+  /* avoid thrashing this call */
+  usleep(100);
+  
+  /* If escape is pressed, kill everything. */
+  if( key == escape_key ) { 
+    /* shut down our window */
+    glutDestroyWindow(m_window); 
+    glutLeaveMainLoop();
+  }
 }
 
-int main(int argc, char **argv) 
-{  
-  /* Initialize GLUT state - glut will take any command line arguments that pertain to it or 
-     X Windows - look at its documentation at http://reality.sgi.com/mjk/spec3/spec3.html */  
-  glutInit(&argc, argv);  
+/* For callbacks */
+GLUTWindow *g_current_instance;
+extern "C" void drawCallback() {
+    g_current_instance->DrawGLScene();
+}
+extern "C" void resizeCallback( int w, int h ) {
+    g_current_instance->ReSizeGLScene( w, h );
+}
+extern "C" void keyCallback( unsigned char key, int x, int y ) {
+    g_current_instance->keyPressed( key, x, y );
+}
 
+GLUTWindow::GLUTWindow( int argc, char **argv,  
+                        int w_width /* = 1024 */, int w_height /* = 768 */ )
+  : m_w_width(w_width),
+    m_w_height(w_height)
+{
+  g_current_instance = this;
+  
+  m_rotate_x = 30.0f;
+  m_rotate_y = 0.0f;
+  
+  /* Initialize GLUT state */  
+  glutInit(&argc, argv);  
+    
   /* Select type of Display mode:   
      Double buffer 
      RGBA color
@@ -695,39 +616,41 @@ int main(int argc, char **argv)
      Depth buffered for automatic clipping */  
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);  
 
-  /* get a 640 x 480 window */
-  glutInitWindowSize(1024, 768);  
+  /* get a window */
+  glutInitWindowSize( w_width, w_height );  
 
   /* the window starts at the upper left corner of the screen */
   glutInitWindowPosition(0, 0);  
 
   /* Open a window */  
-  window = glutCreateWindow("Simple particle model over heightfield computed in real time on INPE MEPhI cluster");  
+  m_window = glutCreateWindow("Simple particle model over heightfield computed in real time on INPE MEPhI cluster");  
 
   /* Register the function to do all our OpenGL drawing. */
-  glutDisplayFunc(&DrawGLScene);  
+  glutDisplayFunc(::drawCallback);
 
-  /* Go fullscreen.  This is as soon as possible. */
-//  glutFullScreen();
+  /* Go fullscreen. This is as soon as possible. */
+  //  glutFullScreen();
 
   /* Even if there are no events, redraw our gl scene. */
-  glutIdleFunc(&DrawGLScene);
+  glutIdleFunc(::drawCallback);
 
   /* Register the function called when our window is resized. */
-  glutReshapeFunc(&ReSizeGLScene);
+  glutReshapeFunc(::resizeCallback);
 
   /* Register the function called when the keyboard is pressed. */
-  glutKeyboardFunc(&keyPressed);
+  glutKeyboardFunc(::keyCallback);
 
   /* Initialize our window. */
-  InitGL(640, 480);
-  
+  InitGL( w_width, w_height );
+
+  /* This will make sure that GLUT doesn't kill the program 
+   * when the window is closed by the OS */
+  glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
+      GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+
   /* Start Event Processing Engine */  
-  glutMainLoop();  
+  glutMainLoop();
 
-  return 1;
 }
-
-
 
 
