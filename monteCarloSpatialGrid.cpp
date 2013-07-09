@@ -1,15 +1,28 @@
-//
-// This code was created by Jeff Molofee '99 (ported to Linux/GLUT by Richard Campbell '99)
-//
-// If you've found this code useful, please let me know.
-//
-// Visit me at www.demonews.com/hosted/nehe 
-// (email Richard Campbell at ulmont@bellsouth.net)
-//
-#include <GL/freeglut.h>    // Header File For The GLUT Library 
-#include <GL/gl.h>	// Header File For The OpenGL32 Library
-#include <GL/glu.h>	// Header File For The GLu32 Library
-#include <unistd.h>     // needed to sleep
+/*
+ * Simple particle model over heightfield computed in real time on INPE MEPhI cluster.
+ *
+ * Copyright (C) Vlad Kaipetsky <vkaipetsky@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+#include <GL/freeglut.h>    
+#include <GL/gl.h> 
+#include <GL/glu.h> 
+
+#include <unistd.h>
 #include <math.h>
 
 #include <vector>
@@ -25,18 +38,18 @@ float aroundX = 30.0f;
 float aroundY = 0.0f;
 
 /* A general OpenGL initialization function.  Sets all of the initial parameters. */
-void InitGL(int Width, int Height)	        // We call this right after our OpenGL window is created.
+void InitGL(int Width, int Height)          // We call this right after our OpenGL window is created.
 {
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);		// This Will Clear The Background Color To Black
-  glClearDepth(1.0);				// Enables Clearing Of The Depth Buffer
-  glDepthFunc(GL_LESS);			        // The Type Of Depth Test To Do
-  glEnable(GL_DEPTH_TEST);		        // Enables Depth Testing
-  glShadeModel(GL_SMOOTH);			// Enables Smooth Color Shading
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);    // This Will Clear The Background Color To Black
+  glClearDepth(1.0);        // Enables Clearing Of The Depth Buffer
+  glDepthFunc(GL_LESS);              // The Type Of Depth Test To Do
+  glEnable(GL_DEPTH_TEST);            // Enables Depth Testing
+  glShadeModel(GL_SMOOTH);      // Enables Smooth Color Shading
 
   glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();				// Reset The Projection Matrix
+  glLoadIdentity();        // Reset The Projection Matrix
 
-  gluPerspective(45.0f,(GLfloat)Width/(GLfloat)Height,0.1f,100.0f);	// Calculate The Aspect Ratio Of The Window
+  gluPerspective(45.0f,(GLfloat)Width/(GLfloat)Height,0.1f,100.0f);  // Calculate The Aspect Ratio Of The Window
 
   glMatrixMode(GL_MODELVIEW);
 }
@@ -44,10 +57,10 @@ void InitGL(int Width, int Height)	        // We call this right after our OpenG
 /* The function called when our window is resized (which shouldn't happen, because we're fullscreen) */
 void ReSizeGLScene(int Width, int Height)
 {
-  if (Height==0)				// Prevent A Divide By Zero If The Window Is Too Small
+  if (Height==0)        // Prevent A Divide By Zero If The Window Is Too Small
     Height=1;
 
-  glViewport(0, 0, Width, Height);		// Reset The Current Viewport And Perspective Transformation
+  glViewport(0, 0, Width, Height);    // Reset The Current Viewport And Perspective Transformation
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -180,11 +193,11 @@ Vector3 prodVec( const Vector3& a, const float c )
 void DrawGLScene()
 {
   glClearColor( 1.0f, 1.0f, 1.0f, 1.0f );
-  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
+  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);  // Clear The Screen And The Depth Buffer
 
-  glLoadIdentity();				// make sure we're no longer rotated.
-  glTranslatef(0.0f,0.0f,-5.0f);		// Move Right 3 Units, and back into the screen 7
-	
+  glLoadIdentity();        // make sure we're no longer rotated.
+  glTranslatef(0.0f,0.0f,-5.0f);    // Move Right 3 Units, and back into the screen 7
+  
   glRotatef(aroundX,1.0f,0.0f,0.0f);
   glRotatef(aroundY,0.0f,1.0f,0.0f);
 
