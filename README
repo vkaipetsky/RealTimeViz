@@ -1,0 +1,29 @@
+What is it?
+===========
+
+Simple particle model over heightfield computed in real time on INPE MEPhI cluster.
+
+How to use it?
+==========
+
+Building:
+$> make clean all
+rm -fv glut_window.o main.o timer.o utils.o monteCarloSpatialGrid
+removed 'glut_window.o'
+removed 'main.o'
+removed 'timer.o'
+removed 'utils.o'
+removed 'monteCarloSpatialGrid'
+g++ -I/usr/include/libdrm   -Wall -g -c glut_window.cpp
+g++ -I/usr/include/libdrm   -Wall -g -c main.cpp
+g++ -I/usr/include/libdrm   -Wall -g -c timer.cpp
+g++ -I/usr/include/libdrm   -Wall -g -c utils.cpp
+g++ -lXi -lXmu -lXt -lX11 -lGLU -lGL    -lglut -lm glut_window.o main.o timer.o utils.o -o monteCarloSpatialGrid
+$>
+
+And run:
+$> ./monteCarloSpatialGrid
+$>
+
+Enjoy!
+
