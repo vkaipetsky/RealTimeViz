@@ -350,7 +350,7 @@ void GLUTWindow::DrawGLScene() {
                       // pressure
                       if ( dsq > 0.000001f )
                       {
-                        addVec( particle.vel, prodVec( diffVec( particle.pos, otherParticle.pos ), 0.01f / expf(sqrtf( dsq )) ) );
+                        particle.vel += ( particle.pos - otherParticle.pos ) * ( 0.01f / expf(sqrtf( dsq )) );
 //                        addVec( particle.vel, prodVec( diffVec( particle.pos, otherParticle.pos ), 0.01f / sqrtf( dsq ) ) );
 //                        addVec( particle.vel, prodVec( diffVec( particle.pos, otherParticle.pos ), 0.01f / dsq ) );
                       }

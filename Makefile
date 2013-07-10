@@ -21,7 +21,7 @@ OBJ = glut_window.o main.o timer.o utils.o
 monteCarloSpatialGrid: $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) -o monteCarloSpatialGrid
 
-glut_window.o: glut_window.cpp
+glut_window.o: glut_window.cpp glut_window.hpp utils.hpp
 	$(CC) $(CFLAGS) -c glut_window.cpp
 
 main.o: main.cpp
@@ -30,7 +30,7 @@ main.o: main.cpp
 timer.o: timer.cpp
 	$(CC) $(CFLAGS) -c timer.cpp
 
-utils.o: utils.cpp
+utils.o: utils.cpp utils.hpp
 	$(CC) $(CFLAGS) -c utils.cpp
   
 clean:

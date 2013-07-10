@@ -35,8 +35,49 @@ struct Vector3
 {
   Vector3() {} // empty default ctor for perf reasons
   Vector3( float newX, float newY, float newZ ) : x(newX), y(newY), z(newZ) {}
+
+  Vector3& operator -= ( const Vector3& rhs )
+  {
+    x -= rhs.x;
+    y -= rhs.y;
+    z -= rhs.z;
+    return *this;
+  }
+
+  Vector3& operator += ( const Vector3& rhs )
+  {
+    x += rhs.x;
+    y += rhs.y;
+    z += rhs.z;
+    return *this;
+  }
+
+  Vector3& operator *= ( const float rhs )
+  {
+    x *= rhs;
+    y *= rhs;
+    z *= rhs;
+    return *this;
+  }
+
+
   float x, y, z;
 };
+
+inline Vector3 operator + ( const Vector3& lhs, const Vector3& rhs )
+{
+  return Vector3( lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z );
+}
+
+inline Vector3 operator - ( const Vector3& lhs, const Vector3& rhs )
+{
+  return Vector3( lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z );
+}
+
+inline Vector3 operator * ( const Vector3& lhs, const float rhs )
+{
+  return Vector3( lhs.x * rhs, lhs.y * rhs, lhs.z * rhs );
+}
 
 struct Particle
 {
@@ -64,10 +105,6 @@ float randInRange(float min, float max);
 float distanceSquared( const Vector3& a, const Vector3& b );
 
 inline float pow2( float val ) { return val*val; };
-
-void addVec( Vector3& a, const Vector3& b );
-Vector3 diffVec( const Vector3& a, const Vector3& b );
-Vector3 prodVec( const Vector3& a, const float c );
 
 AABB cellAABB( int i, int j, int k );
  

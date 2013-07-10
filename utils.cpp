@@ -31,23 +31,6 @@ float distanceSquared( const Vector3& a, const Vector3& b )
   return (a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y) + (a.z - b.z)*(a.z - b.z);
 }
 
-void addVec( Vector3& a, const Vector3& b )
-{
-  a.x += b.x;
-  a.y += b.y;
-  a.z += b.z;
-}
-
-Vector3 diffVec( const Vector3& a, const Vector3& b )
-{
-  return Vector3( a.x - b.x, a.y - b.y, a.z - b.z );
-}
-
-Vector3 prodVec( const Vector3& a, const float c )
-{
-  return Vector3( a.x * c, a.y * c, a.z * c );
-}
-
 AABB cellAABB( int i, int j, int k )
 {
   const float offsetX = -2.0f;
