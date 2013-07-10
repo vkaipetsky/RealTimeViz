@@ -1,13 +1,15 @@
+INCLUDE = -I/usr/include/ -I/opt/X11/include/
+LIBDIR  = -L/opt/X11/lib/
 
 all: monteCarloSpatialGrid
 
 CC = g++
 
-CFLAGS +=  $(shell pkg-config --cflags x11 xi xmu gl glu)
-LDFLAGS += $(shell pkg-config --libs x11 xi xmu gl glu) 
+CFLAGS +=  $(shell pkg-config --cflags x11 xi xmu gl glu) $(INCLUDE)
+LDFLAGS += $(shell pkg-config --libs x11 xi xmu gl glu)
 
 # GLUT does not provide .pc file for pk-config
-LDFLAGS += -lglut
+LDFLAGS += -lglut -lGL -lGLU $(LIBDIR)
 
 LDFLAGS += -lm
 
