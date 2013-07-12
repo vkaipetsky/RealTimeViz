@@ -675,10 +675,11 @@ GLUTWindow::GLUTWindow( int argc, char **argv,
    * when the window is closed by the OS */
   glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
       GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-
-  /* Start Event Processing Engine */  
-  glutMainLoop();
-
 }
 
 
+void GLUTWindow::GLUTMainLoop()
+{
+  /* Start Event Processing Engine */  
+  glutMainLoop();
+}

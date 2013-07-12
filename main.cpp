@@ -21,8 +21,11 @@
 
 #include "glut_window.hpp"
 
-int main( int argc, char **argv ) {
-  GLUTWindow w(argc, argv);
+int main( int argc, char **argv )
+{
+  GLUTWindow window(argc, argv);
+
+  window.GLUTMainLoop();
 
   return 0;
 }

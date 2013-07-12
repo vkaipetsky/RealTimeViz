@@ -48,6 +48,8 @@ public:
 
 public:
   GLUTWindow( int argc, char **argv, int w_width = 1024, int w_height = 768 );
+
+  void GLUTMainLoop();
 };
 
 #endif  // __GLUT_WINDOW_H__
