@@ -22,75 +22,7 @@
 #ifndef __UTILS_HPP__
 #define __UTILS_HPP__
 
-#include <vector>
-
-struct Index3
-{
-  int i, j, k;
-};
-
-struct Vector3
-{
-  Vector3() {} // empty default ctor for perf reasons
-  Vector3( float newX, float newY, float newZ ) : x(newX), y(newY), z(newZ) {}
-
-  Vector3& operator -= ( const Vector3& rhs )
-  {
-    x -= rhs.x;
-    y -= rhs.y;
-    z -= rhs.z;
-    return *this;
-  }
-
-  Vector3& operator += ( const Vector3& rhs )
-  {
-    x += rhs.x;
-    y += rhs.y;
-    z += rhs.z;
-    return *this;
-  }
-
-  Vector3& operator *= ( const float rhs )
-  {
-    x *= rhs;
-    y *= rhs;
-    z *= rhs;
-    return *this;
-  }
-
-
-  float x, y, z;
-};
-
-inline Vector3 operator + ( const Vector3& lhs, const Vector3& rhs )
-{
-  return Vector3( lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z );
-}
-
-inline Vector3 operator - ( const Vector3& lhs, const Vector3& rhs )
-{
-  return Vector3( lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z );
-}
-
-inline Vector3 operator * ( const Vector3& lhs, const float rhs )
-{
-  return Vector3( lhs.x * rhs, lhs.y * rhs, lhs.z * rhs );
-}
-
-struct Particle
-{
-  struct Vector3 pos;
-  struct Vector3 vel;
-  struct Vector3 color;
-  struct Index3 bucket;
-};
-
-// spatial grid
-class Cell
-{
-public:
-  std::vector<Particle> particles;
-};
+#include "spatial_grid.hpp"
 
 struct AABB
 {

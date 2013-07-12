@@ -29,8 +29,9 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "timer.hpp"
+#include "utils.hpp"
 #include "glut_window.hpp"
-//#include "utils.hpp"
 
 #define NUM_PARTICLES 10000
 
@@ -207,7 +208,7 @@ void DrawHeightfield()
           }
         }
       }
-      
+
       // and draw the 4 triangles
       glVertex3f( -2.0f + i * 4.0f / HF_HEIGHT, heights[i][j], -2.0f + j * 4.0f / HF_HEIGHT );
       glVertex3f( -2.0f + i * 4.0f / HF_HEIGHT, heights[i][j+1], -2.0f + (j+1) * 4.0f / HF_HEIGHT );
@@ -590,7 +591,7 @@ void GLUTWindow::DrawGLScene() {
   trajectories.Track();
   trajectories.Render();
 
-  DrawCells();
+//  DrawCells();
 
   DrawParticleVelocities();
 

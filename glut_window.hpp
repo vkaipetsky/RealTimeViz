@@ -23,9 +23,6 @@
 #ifndef __GLUT_WINDOW_H__
 #define __GLUT_WINDOW_H__
 
-#include "utils.hpp"
-#include "timer.hpp"
-
 struct GLUTWindow {
   /* ASCII code for the escape key. */
   static const int escape_key = 27;
