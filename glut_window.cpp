@@ -19,7 +19,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <GL/freeglut.h>   // Header File For The GLUT Library
+#include <GL/gl.h>         // Header File For The OpenGL32 Library
+#include <GL/glu.h>        // Header File For The GLu32 Library
+#include <GL/glx.h>        // Header file fot the glx libraries.
+
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <math.h>
+
 #include "glut_window.hpp"
+//#include "utils.hpp"
 
 #define NUM_PARTICLES 10000
 
@@ -29,34 +40,6 @@
 
 Cell cells[NUM_CELLS_ACROSS_X][NUM_CELLS_ACROSS_Y][NUM_CELLS_ACROSS_Z];
 struct Particle particles[NUM_PARTICLES];
-
-void GLUTWindow::drawAABB( const AABB& aabb, unsigned int color /* = 0 */ )
-{
-  glBegin(GL_LINES);
-  // draw the 12 lines that make up this box:
-  // bottom 4 lines
-  glVertex3f( aabb.min.x, aabb.min.y, aabb.min.z );
-  glVertex3f( aabb.max.x, aabb.min.y, aabb.min.z );
-
-  glVertex3f( aabb.max.x, aabb.min.y, aabb.min.z );
-  glVertex3f( aabb.max.x, aabb.min.y, aabb.max.z );
-
-  glVertex3f( aabb.max.x, aabb.min.y, aabb.max.z );
-  glVertex3f( aabb.min.x, aabb.min.y, aabb.max.z );
-
-  glVertex3f( aabb.min.x, aabb.min.y, aabb.max.z );
-  glVertex3f( aabb.min.x, aabb.min.y, aabb.min.z );
-  // top 4 lines
-  // connecting 4 lines
-  glEnd();
-}
-
-void GLUTWindow::interpolateColor( float r0, float g0, float b0,
-                                   float r1, float g1, float b1, float t )
-{
-  glColor3f( r0 * (1.0f-t) + r1 * t, g0 * (1.0f-t) + g1 * t, b0 * (1.0f-t) + b1 * t );
-}
-
 
 /* A general OpenGL initialization function.  Sets all of the initial parameters. 
  * We call this right after our OpenGL window is created.     */
@@ -93,59 +76,76 @@ void GLUTWindow::ReSizeGLScene( int w, int h ) {
   glMatrixMode(GL_MODELVIEW);
 }
 
-/* The main drawing function. */
-void GLUTWindow::DrawGLScene() {
-  static Timer timer;
 
-  // Clear The Screen And The Depth Buffer 
-  glClearColor( 1.0f, 1.0f, 1.0f, 1.0f );
-  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+// the heightfield memory
+const int HF_WIDTH = 50;//100;
+const int HF_HEIGHT = 50;//100;
+float heights[HF_WIDTH][HF_HEIGHT];
+int generated = 0, i, j;
 
-  glLoadIdentity();        // make sure we're no longer rotated.
-  glTranslatef(0.0f,0.0f,-5.0f);    // Move Right 3 Units, and back into the screen 7
 
-  glRotatef(m_rotate_x,1.0f,0.0f,0.0f);
-  glRotatef(m_rotate_y,0.0f,1.0f,0.0f);
-
-  glEnable( GL_LINE_SMOOTH );
-  glEnable( GL_POLYGON_SMOOTH );
-  glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
-  glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
-
-  // the heightfield memory
-  static const int HF_WIDTH = 50;//100;
-  static const int HF_HEIGHT = 50;//100;
-  static float heights[HF_WIDTH][HF_HEIGHT];
-  static int generated = 0, i, j;
-
-  if ( !generated )
+void GenerateHeightfield()
+{
+  // generate a random heightfield within the cube 1.0f across
+  for ( i = 0;  i < HF_HEIGHT;  i++ )
   {
-    // generate a random heightfield within the cube 1.0f across
-    for ( i = 0;  i < HF_HEIGHT;  i++ )
+    for ( j = 0;  j < HF_WIDTH;  j++)
     {
-      for ( j = 0;  j < HF_WIDTH;  j++)
-      {
-        float distanceFromCenter = sqrtf( pow2(0.0f+(float)(i-HF_WIDTH/3)*10.0f/HF_WIDTH) + pow2(0.0f + (float)(j-HF_HEIGHT/2)*10.0f/HF_HEIGHT) );
-        heights[i][j] = 0.8f * cosf( distanceFromCenter ) * cosf( distanceFromCenter ) / (1.0f + 0.1f * distanceFromCenter * distanceFromCenter );
-      }
+      float distanceFromCenter = sqrtf( pow2(0.0f+(float)(i-HF_WIDTH/3)*10.0f/HF_WIDTH) + pow2(0.0f + (float)(j-HF_HEIGHT/2)*10.0f/HF_HEIGHT) );
+      heights[i][j] = 0.8f * cosf( distanceFromCenter ) * cosf( distanceFromCenter ) / (1.0f + 0.1f * distanceFromCenter * distanceFromCenter );
     }
+  }
+}
 
-    // generate the particle positions above the heightfield
-    for ( i = 0;  i < NUM_PARTICLES;  i++ )
-    {
-      particles[i].pos.x = randInRange( -2.0f, 2.0f );
-      particles[i].pos.y = randInRange( 1.0f, 2.0f );
-      particles[i].pos.z = randInRange( -2.0f, 2.0f );
 
-      particles[i].vel.x = particles[i].vel.y = particles[i].vel.z = 0.0f;
-    }
+void GenerateParticles()
+{
+  // generate the particle positions above the heightfield
+  for ( i = 0;  i < NUM_PARTICLES;  i++ )
+  {
+    particles[i].pos.x = randInRange( -2.0f, 2.0f );
+    particles[i].pos.y = randInRange( 1.0f, 2.0f );
+    particles[i].pos.z = randInRange( -2.0f, 2.0f );
 
-    generated = 1;
+    particles[i].vel.x = particles[i].vel.y = particles[i].vel.z = 0.0f;
   }
 
+  for ( i = 0;  i < NUM_PARTICLES;  i++ )
+  {
+    // color the particles depending on the bucket they belong to
+    particles[i].bucket.i = ( particles[i].pos.x + 2.0f ) / ( 4.0f / 16.0f );
+    particles[i].bucket.j = ( particles[i].pos.y - 1.0f ) / ( 1.0f / 2.0f );
+    particles[i].bucket.k = ( particles[i].pos.z + 2.0f ) / ( 4.0f / 16.0f );
+    particles[i].color.x = ( particles[i].pos.x + 2.0f ) / 4.0f;
+    particles[i].color.y = ( particles[i].pos.y - 1.0f ) / 1.0f;
+    particles[i].color.z = ( particles[i].pos.z + 2.0f ) / 4.0f;
+  }
+  
+  // put the particles into the appropriate grid cells
+  for ( i = 0;  i < NUM_PARTICLES;  i++ )
+  {
+    int cellI = ( particles[i].pos.x + 2.0f ) * 32.0f / ( 4.0f );
+    int cellJ = ( particles[i].pos.y - 1.0f ) * 8.0f / ( 1.0f );
+    int cellK = ( particles[i].pos.z + 2.0f ) * 32.0f / ( 4.0f );
+    // limit the indices to the sensible range!
+    if ( cellI < 0 ) cellI = 0;
+    if ( cellJ < 0 ) cellJ = 0;
+    if ( cellK < 0 ) cellK = 0;
+    if ( cellI > 31 ) cellI = 31;
+    if ( cellJ > 7 )  cellJ = 7;
+    if ( cellK > 31 ) cellK = 31;
+    cells[cellI][cellJ][cellK].particles.push_back( particles[i] );
+  }
+
+  // TODO: assert here that the particles are in the correct cells!
+}
+
+
+void DrawHeightfield()
+{
   glBegin(GL_TRIANGLES);        // start drawing the cube.
   
-// generate a random heightfield within the cube 1.0f across
+  // draw our heightfield
   for ( i = 0;  i < HF_HEIGHT-1;  i++ )
   {
     for ( j = 0;  j < HF_WIDTH-1;  j++)
@@ -153,7 +153,6 @@ void GLUTWindow::DrawGLScene() {
       // generate the offset point in the centers from the corner locations
       float centerHeight = (heights[i][j] + heights[i][j+1] + heights[i+1][j] + heights[i+1][j+1] ) * 0.25f;
 
-#if 1
       const float darkBlue = -0.05f;
       const float darkGreen = 0.1f;
       const float lushGreen = 0.2f;
@@ -208,10 +207,7 @@ void GLUTWindow::DrawGLScene() {
           }
         }
       }
-#else
-      float red = centerHeight + 0.2f;
-      glColor3f(red,1.0f-red,0.0f);
-#endif
+      
       // and draw the 4 triangles
       glVertex3f( -2.0f + i * 4.0f / HF_HEIGHT, heights[i][j], -2.0f + j * 4.0f / HF_HEIGHT );
       glVertex3f( -2.0f + i * 4.0f / HF_HEIGHT, heights[i][j+1], -2.0f + (j+1) * 4.0f / HF_HEIGHT );
@@ -232,43 +228,12 @@ void GLUTWindow::DrawGLScene() {
   }
 
   glEnd();
+}
 
+
+void UpdateAndDrawParticles()
+{
   glBegin(GL_POINTS);
-//  glColor3f(0.0f,0.5f,1.0f);
-  static int generatedParticleColors = 0;
-  if (!generatedParticleColors)
-  {
-    for ( i = 0;  i < NUM_PARTICLES;  i++ )
-    {
-      // color the particles depending on the bucket they belong to
-      particles[i].bucket.i = ( particles[i].pos.x + 2.0f ) / ( 4.0f / 16.0f );
-      particles[i].bucket.j = ( particles[i].pos.y - 1.0f ) / ( 1.0f / 2.0f );
-      particles[i].bucket.k = ( particles[i].pos.z + 2.0f ) / ( 4.0f / 16.0f );
-      particles[i].color.x = ( particles[i].pos.x + 2.0f ) / 4.0f;
-      particles[i].color.y = ( particles[i].pos.y - 1.0f ) / 1.0f;
-      particles[i].color.z = ( particles[i].pos.z + 2.0f ) / 4.0f;
-    }
-    generatedParticleColors = 1;
-    
-    // put the particles into the appropriate grid cells
-    for ( i = 0;  i < NUM_PARTICLES;  i++ )
-    {
-      int cellI = ( particles[i].pos.x + 2.0f ) * 32.0f / ( 4.0f );
-      int cellJ = ( particles[i].pos.y - 1.0f ) * 8.0f / ( 1.0f );
-      int cellK = ( particles[i].pos.z + 2.0f ) * 32.0f / ( 4.0f );
-      // limit the indices to the sensible range!
-      if ( cellI < 0 ) cellI = 0;
-      if ( cellJ < 0 ) cellJ = 0;
-      if ( cellK < 0 ) cellK = 0;
-      if ( cellI > 31 ) cellI = 31;
-      if ( cellJ > 7 )  cellJ = 7;
-      if ( cellK > 31 ) cellK = 31;
-      cells[cellI][cellJ][cellK].particles.push_back( particles[i] );
-    }
-
-    // TODO: assert here that the particles are in the correct cells!
-  }
-
 #if 0
   for ( i = 0;  i < NUM_CELLS_ACROSS_X;  i++ )
   {
@@ -483,89 +448,151 @@ void GLUTWindow::DrawGLScene() {
   }
 #endif
   glEnd();
+}
+
 
 #define NUM_TRAJ 30
 #define TRAJ_LENGTH 2500
 
-  static struct Vector3 history[NUM_TRAJ][TRAJ_LENGTH];
-  static int trajStartFrame = 0;
-  static int lengthTrajRecorded = 0;
 
-  int trajIndices[NUM_TRAJ] = { 10, 20, 40, 50, 60, 70, 80, 100, 200, 300,
-                                210, 220, 240, 250, 260, 270, 280, 2100, 2200, 2300,
-                                310, 320, 340, 350, 360, 370, 380, 3100, 3200, 3300 };
+const int trajIndices[NUM_TRAJ] = { 10, 20, 40, 50, 60, 70, 80, 100, 200, 300,
+                                    210, 220, 240, 250, 260, 270, 280, 2100, 2200, 2300,
+                                    310, 320, 340, 350, 360, 370, 380, 3100, 3200, 3300 };
 
-  int curTrajFrame = ( trajStartFrame + lengthTrajRecorded ) % TRAJ_LENGTH;
-  for ( i = 0;  i < NUM_TRAJ;  i++ )
+
+struct Trajectories
+{
+  struct Vector3 history[NUM_TRAJ][TRAJ_LENGTH];
+
+  Trajectories()
   {
-    history[i][curTrajFrame] = particles[trajIndices[i]].pos;
+    trajStartFrame = 0;
+    lengthTrajRecorded = 0;
   }
 
-  if ( lengthTrajRecorded < TRAJ_LENGTH )
+  void Track()
   {
-    ++lengthTrajRecorded;
-  }
-  else
-  {
-    trajStartFrame = ( trajStartFrame + 1 ) % TRAJ_LENGTH;
+    int curTrajFrame = ( trajStartFrame + lengthTrajRecorded ) % TRAJ_LENGTH;
+    for ( i = 0;  i < NUM_TRAJ;  i++ )
+    {
+      history[i][curTrajFrame] = particles[trajIndices[i]].pos;
+    }
+
+    if ( lengthTrajRecorded < TRAJ_LENGTH )
+    {
+      ++lengthTrajRecorded;
+    }
+    else
+    {
+      trajStartFrame = ( trajStartFrame + 1 ) % TRAJ_LENGTH;
+    }
   }
 
+  void Render()
+  {
+    glBegin(GL_LINES);
+
+    // draw the point trajectories
+    if(1)
+    for ( i = 0;  i < NUM_TRAJ;  i++ )
+    {
+      if ( lengthTrajRecorded > 1 )
+      {
+        glColor3f( particles[trajIndices[i]].bucket.i / 16.0f, particles[trajIndices[i]].bucket.j / 2.0f, particles[trajIndices[i]].bucket.k / 16.0f );
+        for ( j = 0;  j < lengthTrajRecorded-1;  j++ )
+        {
+          int trajIndex = (trajStartFrame+j)%TRAJ_LENGTH;
+          glVertex3f( history[i][trajIndex].x, history[i][trajIndex].y, history[i][trajIndex].z );
+          trajIndex = (trajStartFrame+j+1)%TRAJ_LENGTH;
+          glVertex3f( history[i][trajIndex].x, history[i][trajIndex].y, history[i][trajIndex].z );
+        }
+      }
+    }
+
+    glEnd();
+  }
+
+  int trajStartFrame;
+  int lengthTrajRecorded;
+};
+
+
+void DrawCells()
+{
   glBegin(GL_LINES);
 
   // draw the grid cells
   glColor3f( 0.0f, 0.5f, 0.8f );
-  if(0)
-  for ( i = 0;  i < NUM_CELLS_ACROSS_X;  i++ )
+  for ( int i = 0;  i < NUM_CELLS_ACROSS_X;  i++ )
   {
-    for ( j = 0;  j < NUM_CELLS_ACROSS_Y;  j++ )
+    for ( int j = 0;  j < NUM_CELLS_ACROSS_Y;  j++ )
     {
       for ( int k = 0;  k < NUM_CELLS_ACROSS_Z;  k++ )
       {
-        drawAABB( cellAABB( i, j, k ) );
+        AABB aabb = cellAABB( i, j, k );
+        drawAABB( aabb );
       }
     }
-  }
-  
-  // draw the point trajectories
-  if(1)
-  for ( i = 0;  i < NUM_TRAJ;  i++ )
-  {
-    if ( lengthTrajRecorded > 1 )
-    {
-      glColor3f( particles[trajIndices[i]].bucket.i / 16.0f, particles[trajIndices[i]].bucket.j / 2.0f, particles[trajIndices[i]].bucket.k / 16.0f );
-      for ( j = 0;  j < lengthTrajRecorded-1;  j++ )
-      {
-        int trajIndex = (trajStartFrame+j)%TRAJ_LENGTH;
-        glVertex3f( history[i][trajIndex].x, history[i][trajIndex].y, history[i][trajIndex].z );
-        trajIndex = (trajStartFrame+j+1)%TRAJ_LENGTH;
-        glVertex3f( history[i][trajIndex].x, history[i][trajIndex].y, history[i][trajIndex].z );
-      }
-    }
-  }
-
-  // draw the particle velocities
-  if(0)
-  for ( i = 0;  i < NUM_PARTICLES;  i++ )
-  {
-//    glColor3f( 0.0f, 0.3f, 0.7f );
-    glColor3f( particles[i].bucket.i / 16.0f, particles[i].bucket.j / 2.0f, particles[i].bucket.k / 16.0f );
-    glVertex3f( particles[i].pos.x, particles[i].pos.y, particles[i].pos.z );
-    glVertex3f( particles[i].pos.x + particles[i].vel.x * 0.03f, particles[i].pos.y + particles[i].vel.y * 0.03f, particles[i].pos.z + particles[i].vel.z * 0.03f );
-/*
-    // find the height under this particle
-    int heightFieldI = ( particles[i].pos.x + 2.0f ) * 100.0f / ( 4.0f );
-    int heightFieldJ = ( particles[i].pos.z + 2.0f ) * 100.0f / ( 4.0f );
-    if ( heightFieldI < 0 ) heightFieldI = 0;
-    if ( heightFieldJ < 0 ) heightFieldJ = 0;
-    if ( heightFieldI >= 100 ) heightFieldI = 100-1;
-    if ( heightFieldJ >= 100 ) heightFieldJ = 100-1;
-
-    glVertex3f( particles[i].pos.x, particles[i].pos.y, particles[i].pos.z );
-    glVertex3f( -2.0f + heightFieldI * 4.0f / HF_HEIGHT, heights[heightFieldI][heightFieldJ], -2.0f + heightFieldJ * 4.0f / HF_HEIGHT );
-*/
   }
 
   glEnd();
+}
+
+
+void DrawParticleVelocities()
+{
+  glBegin(GL_LINES);
+
+  // draw the particle velocities
+  for ( i = 0;  i < NUM_PARTICLES;  i++ )
+  {
+    glColor3f( particles[i].bucket.i / 16.0f, particles[i].bucket.j / 2.0f, particles[i].bucket.k / 16.0f );
+    glVertex3f( particles[i].pos.x, particles[i].pos.y, particles[i].pos.z );
+    glVertex3f( particles[i].pos.x + particles[i].vel.x * 0.03f, particles[i].pos.y + particles[i].vel.y * 0.03f, particles[i].pos.z + particles[i].vel.z * 0.03f );
+  }
+
+  glEnd();
+}
+
+
+/* The main drawing function. */
+void GLUTWindow::DrawGLScene() {
+  static Timer timer;
+  static Trajectories trajectories;
+
+  // Clear The Screen And The Depth Buffer 
+  glClearColor( 1.0f, 1.0f, 1.0f, 1.0f );
+  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+  glLoadIdentity();        // make sure we're no longer rotated.
+  glTranslatef(0.0f,0.0f,-5.0f);    // Move Right 3 Units, and back into the screen 7
+
+  glRotatef(m_rotate_x,1.0f,0.0f,0.0f);
+  glRotatef(m_rotate_y,0.0f,1.0f,0.0f);
+
+  glEnable( GL_LINE_SMOOTH );
+  glEnable( GL_POLYGON_SMOOTH );
+  glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
+  glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
+
+  if ( !generated )
+  {
+    GenerateHeightfield();
+    GenerateParticles();
+
+    generated = 1;
+  }
+
+  DrawHeightfield();
+
+  UpdateAndDrawParticles();
+
+  trajectories.Track();
+  trajectories.Render();
+
+  DrawCells();
+
+  DrawParticleVelocities();
 
   // swap the buffers to display, since double buffering is used.
   glutSwapBuffers();

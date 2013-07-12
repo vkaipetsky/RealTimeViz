@@ -22,8 +22,6 @@
 #ifndef __UTILS_HPP__
 #define __UTILS_HPP__
 
-#include <stdlib.h>
-
 #include <vector>
 
 struct Index3
@@ -100,7 +98,11 @@ struct AABB
   Vector3 min;
   Vector3 max;
 };
- 
+
+void drawAABB( const AABB& aabb, unsigned int color = 0xff00ffff ); // draw the AABBs purple by default
+void interpolateColor( float r0, float g0, float b0,
+                       float r1, float g1, float b1, float t );
+
 float randInRange(float min, float max);
 float distanceSquared( const Vector3& a, const Vector3& b );
 

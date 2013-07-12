@@ -19,6 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <GL/freeglut.h>   // Header File For The GLUT Library
+#include <GL/gl.h>         // Header File For The OpenGL32 Library
+#include <GL/glu.h>        // Header File For The GLu32 Library
+#include <GL/glx.h>        // Header file fot the glx libraries.
+
+#include <stdlib.h>
+
 #include "utils.hpp"
 
 float randInRange(float min, float max)
@@ -40,4 +47,32 @@ AABB cellAABB( int i, int j, int k )
             Vector3( offsetX + (i+1) * cellSize, (j+1) * cellSize, offsetZ + (k+1) * cellSize ) );
   return res;
 }
+
+void drawAABB( const AABB& aabb, unsigned int color /* = 0 */ )
+{
+  glBegin(GL_LINES);
+  // draw the 12 lines that make up this box:
+  // bottom 4 lines
+  glVertex3f( aabb.min.x, aabb.min.y, aabb.min.z );
+  glVertex3f( aabb.max.x, aabb.min.y, aabb.min.z );
+
+  glVertex3f( aabb.max.x, aabb.min.y, aabb.min.z );
+  glVertex3f( aabb.max.x, aabb.min.y, aabb.max.z );
+
+  glVertex3f( aabb.max.x, aabb.min.y, aabb.max.z );
+  glVertex3f( aabb.min.x, aabb.min.y, aabb.max.z );
+
+  glVertex3f( aabb.min.x, aabb.min.y, aabb.max.z );
+  glVertex3f( aabb.min.x, aabb.min.y, aabb.min.z );
+  // top 4 lines
+  // connecting 4 lines
+  glEnd();
+}
+
+void interpolateColor( float r0, float g0, float b0,
+                       float r1, float g1, float b1, float t )
+{
+  glColor3f( r0 * (1.0f-t) + r1 * t, g0 * (1.0f-t) + g1 * t, b0 * (1.0f-t) + b1 * t );
+}
+
 

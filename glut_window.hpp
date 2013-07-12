@@ -23,16 +23,6 @@
 #ifndef __GLUT_WINDOW_H__
 #define __GLUT_WINDOW_H__
 
-#include <GL/freeglut.h>   // Header File For The GLUT Library
-#include <GL/gl.h>         // Header File For The OpenGL32 Library
-#include <GL/glu.h>        // Header File For The GLu32 Library
-#include <GL/glx.h>        // Header file fot the glx libraries.
-
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <math.h>
-
 #include "utils.hpp"
 #include "timer.hpp"
 
@@ -50,11 +40,6 @@ struct GLUTWindow {
   /* rotation angles. */
   float m_rotate_x;
   float m_rotate_y;
-
-  void drawAABB( const AABB& aabb, unsigned int color = 0 );
-  void interpolateColor( float r0, float g0, float b0,
-                         float r1, float g1, float b1, float t );
-
 
   void InitGL(int Width, int Height);
   
