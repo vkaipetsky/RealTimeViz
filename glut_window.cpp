@@ -22,11 +22,14 @@
 #include <GL/freeglut.h>   // Header File For The GLUT Library
 #include <GL/gl.h>         // Header File For The OpenGL32 Library
 #include <GL/glu.h>        // Header File For The GLu32 Library
-#include <GL/glx.h>        // Header file fot the glx libraries.
+#ifdef _MSC_VER
+  #include <glext.h>        // Header file for the glx libraries.
+#else
+  #include <GL/glx.h>        // Header file for the glx libraries.
+#endif
 
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <math.h>
 
 #include "timer.hpp"
@@ -601,9 +604,6 @@ void GLUTWindow::DrawGLScene() {
 
 /* The function called whenever a key is pressed. */
 void GLUTWindow::keyPressed( unsigned char key, int x, int y ) {
-  /* avoid thrashing this call */
-  usleep(100);
-  
   /* If escape is pressed, kill everything. */
   if( key == escape_key ) { 
     /* shut down our window */

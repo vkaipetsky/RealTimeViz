@@ -20,9 +20,6 @@
  */
 
 #include <GL/freeglut.h>   // Header File For The GLUT Library
-#include <GL/gl.h>         // Header File For The OpenGL32 Library
-#include <GL/glu.h>        // Header File For The GLu32 Library
-#include <GL/glx.h>        // Header file fot the glx libraries.
 
 #include <stdlib.h>
 
