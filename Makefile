@@ -27,9 +27,6 @@ glut_window.o: glut_window.cpp glut_window.hpp utils.hpp
 main.o: main.cpp
 	$(CC) $(CFLAGS) -c main.cpp
 
-timer.o: timer.cpp
-	$(CC) $(CFLAGS) -c timer.cpp
-
 utils.o: utils.cpp utils.hpp
 	$(CC) $(CFLAGS) -c utils.cpp
   
