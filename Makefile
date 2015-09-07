@@ -16,7 +16,7 @@ LDFLAGS += -lm
 # Debug
 CFLAGS += -Wall -g
 
-OBJ = glut_window.o main.o timer.o utils.o
+OBJ = glut_window.o main.o utils.o
 
 monteCarloSpatialGrid: $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) -o monteCarloSpatialGrid
